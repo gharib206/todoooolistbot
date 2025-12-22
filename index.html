@@ -57,6 +57,16 @@
                 list.appendChild(li);
             });
         }
+        // اضافه کردن دکمه اصلی تلگرام برای بستن و ارسال آمار
+tg.MainButton.setText("تایید و بازگشت");
+tg.MainButton.show();
+
+tg.MainButton.onClick(() => {
+    const count = savedTasks.length;
+    // ارسال داده به ربات
+    tg.sendData("تعداد کارهای باقی‌مانده: " + count);
+});
     </script>
 </body>
 </html>
+
