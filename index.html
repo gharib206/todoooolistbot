@@ -57,16 +57,27 @@
                 list.appendChild(li);
             });
         }
-        // اضافه کردن دکمه اصلی تلگرام برای بستن و ارسال آمار
-tg.MainButton.setText("تایید و بازگشت");
+         // فعال کردن دکمه اصلی تلگرام
+tg.MainButton.setText("ارسال لیست به ربات");
 tg.MainButton.show();
 
+// وقتی کاربر روی دکمه آبی پایین گوشی کلیک کرد
 tg.MainButton.onClick(() => {
-    const count = savedTasks.length;
-    // ارسال داده به ربات
-    tg.sendData("تعداد کارهای باقی‌مانده: " + count);
+    // گرفتن لیست کارهایی که در حافظه ذخیره شده بود
+    let currentTasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
+    
+    if (currentTasks.length > 0) {
+        // تبدیل لیست به یک متن زیبا برای ارسال
+        let message = "لیست کارهای من:\n" + currentTasks.map((t, i) => (i+1) + ". " + t).join("\n");
+        
+        // ارسال مستقیم به چت ربات
+        tg.sendData(message);
+    } else {
+        tg.showAlert("لیست شما خالی است!");
+    }
 });
     </script>
 </body>
 </html>
+
 
