@@ -2,24 +2,61 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); text-align: center; padding: 20px; }
-        button { padding: 15px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 8px; width: 100%; }
+        body { background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-family: sans-serif; padding: 20px; }
+        input { width: 60%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        button { padding: 10px; border-radius: 8px; border: none; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); }
+        li { background: var(--tg-theme-secondary-bg-color); margin-top: 10px; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
+        .delete-btn { background: #ff4d4d; color: white; padding: 5px 10px; font-size: 12px; }
     </style>
 </head>
 <body>
-    <h2>سلام! مینی‌اپ من آماده است 🚀</h2>
-    <p>اگر این صفحه را می‌بینید، یعنی مرحله ۳ و ۴ را درست انجام دادید.</p>
-    <button id="testBtn">تست دکمه تلگرام</button>
+    <h3>📝 لیست کارهای من</h3>
+    <input type="text" id="taskInput" placeholder="کار جدید...">
+    <button onclick="addTask()">افزودن</button>
+    <ul id="taskList"></ul>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        document.getElementById('testBtn').addEventListener('click', () => {
-            tg.showAlert("ایول! دکمه کار می‌کند و مینی‌اپ به تلگرام وصل است.");
-        });
+        // لود کردن کارهای ذخیره شده قبلی از حافظه مرورگر
+        let savedTasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
+        renderTasks();
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            if (input.value.trim() === "") return;
+            
+            savedTasks.push(input.value);
+            updateStorage();
+            input.value = "";
+        }
+
+        function deleteTask(index) {
+            savedTasks.splice(index, 1);
+            updateStorage();
+        }
+
+        function updateStorage() {
+            localStorage.setItem('myTasks', JSON.stringify(savedTasks));
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = "";
+            savedTasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${task}</span>
+                    <button class="delete-btn" onclick="deleteTask(${index})">حذف</button>
+                `;
+                list.appendChild(li);
+            });
+        }
     </script>
 </body>
 </html>
