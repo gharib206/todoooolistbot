@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لیست کارهای من</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--tg-theme-hint-color);
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+        button {
+            padding: 10px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        ul { list-style: none; padding: 0; }
+        li {
+            background: var(--tg-theme-secondary-bg-color);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <h3>📝 لیست کارهای روزانه</h3>
+    
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="taskInput" placeholder="کار جدید بنویس...">
+        <button onclick="addTask()">افزودن</button>
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <script>
+        // مقداردهی اولیه مینی‌اپ تلگرام
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // بزرگ کردن صفحه مینی‌اپ
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const taskText = input.value.trim();
+            
+            if (taskText === "") return;
+
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${taskText}</span>
+                <button onclick="this.parentElement.remove()" style="background:red; color:white;">حذف</button>
+            `;
+            
+            document.getElementById('taskList').appendChild(li);
+            input.value = "";
+
+            // نمایش دکمه اصلی تلگرام (Main Button) برای تایید نهایی
+            tg.MainButton.text = "ارسال لیست به ربات";
+            tg.MainButton.show();
+        }
+
+        // وقتی کاربر روی دکمه اصلی تلگرام کلیک کرد
+        tg.onEvent('mainButtonClicked', function(){
+            const tasks = [];
+            document.querySelectorAll('#taskList li span').forEach(el => tasks.push(el.innerText));
+            
+            // ارسال داده‌ها به ربات و بستن مینی‌اپ
+            tg.sendData(JSON.stringify(tasks));
+        });
+    </script>
+</body>
+</html>
