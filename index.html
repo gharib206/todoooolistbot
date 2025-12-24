@@ -79,6 +79,11 @@
             font-weight: 500;
         }
 
+        .task-done {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
         .delete-icon {
             color: #ff4d4d;
             background: rgba(255, 77, 77, 0.1);
@@ -90,6 +95,20 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+        }
+
+        .check-btn {
+            margin-left: 8px;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            background: rgba(36, 139, 237, 0.08);
+            color: var(--button-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .empty-state {
@@ -117,19 +136,24 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.setText("ارسال لیست به ربات");
-        tg.MainButton.hide(); // در ابتدا مخفی است
+        tg.MainButton.show(); // همیشه دکمه را نشان بده
 
+        // ساختار جدید: آرایه‌ای از آبجکت‌ها { text, done }
         let savedTasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
+        if (!Array.isArray(savedTasks)) {
+            savedTasks = [];
+        }
         renderTasks();
 
         function addTask() {
             const input = document.getElementById('taskInput');
-            if (input.value.trim() === "") return;
-            
-            savedTasks.push(input.value);
+            const value = input.value.trim();
+            if (value === "") return;
+
+            savedTasks.push({ text: value, done: false });
             updateStorage();
             input.value = "";
-            tg.HapticFeedback.impactOccurred('light'); // ایجاد لرزش ملایم در گوشی
+            tg.HapticFeedback.impactOccurred('light');
         }
 
         function deleteTask(index) {
@@ -138,21 +162,21 @@
             tg.HapticFeedback.notificationOccurred('success');
         }
 
+        function toggleDone(index) {
+            savedTasks[index].done = !savedTasks[index].done;
+            updateStorage();
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
         function updateStorage() {
             localStorage.setItem('myTasks', JSON.stringify(savedTasks));
             renderTasks();
-            
-            if (savedTasks.length > 0) {
-                tg.MainButton.show();
-            } else {
-                tg.MainButton.hide();
-            }
         }
 
         function renderTasks() {
             const list = document.getElementById('taskList');
             list.innerHTML = "";
-            
+
             if (savedTasks.length === 0) {
                 list.innerHTML = '<div class="empty-state">لیست شما خالی است ☕️</div>';
                 return;
@@ -161,16 +185,59 @@
             savedTasks.forEach((task, index) => {
                 const div = document.createElement('div');
                 div.className = 'task-card';
-                div.innerHTML = `
-                    <span class="task-text">${task}</span>
-                    <button class="delete-icon" onclick="deleteTask(${index})">✕</button>
-                `;
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'task-text';
+                if (task.done) textSpan.classList.add('task-done');
+                textSpan.textContent = task.text;
+
+                const controls = document.createElement('div');
+                controls.style.display = 'flex';
+                controls.style.gap = '6px';
+                controls.style.alignItems = 'center';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'check-btn';
+                checkBtn.innerHTML = task.done ? '✅' : '☐';
+                checkBtn.onclick = () => toggleDone(index);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-icon';
+                delBtn.textContent = '✕';
+                delBtn.onclick = () => deleteTask(index);
+
+                controls.appendChild(checkBtn);
+                controls.appendChild(delBtn);
+
+                div.appendChild(textSpan);
+                div.appendChild(controls);
+
                 list.appendChild(div);
             });
         }
 
         tg.MainButton.onClick(() => {
-            let message = "📝 لیست کارهای نهایی من:\n" + savedTasks.map((t, i) => (i+1) + ". " + t).join("\n");
+            if (savedTasks.length === 0) {
+                const msg = "📝 لیست کارهای نهایی من خالی است.";
+                tg.sendData(msg);
+                return;
+            }
+
+            const done = savedTasks.filter(t => t.done);
+            const undone = savedTasks.filter(t => !t.done);
+
+            let message = "📝 لیست کارهای نهایی من:\n";
+
+            if (undone.length > 0) {
+                message += "\n📌 کارهای باز:\n" +
+                    undone.map((t, i) => (i + 1) + ". " + t.text).join("\n");
+            }
+
+            if (done.length > 0) {
+                message += "\n\n✅ کارهای انجام‌شده:\n" +
+                    done.map((t, i) => (i + 1) + ". " + t.text).join("\n");
+            }
+
             tg.sendData(message);
         });
     </script>
