@@ -57,11 +57,18 @@
             cursor: pointer;
         }
 
+        .task-row {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
         .task-card {
+            flex: 1;
             background: var(--secondary-bg);
             border-radius: 12px;
             padding: 12px 16px;
-            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -98,17 +105,23 @@
         }
 
         .check-btn {
-            margin-left: 8px;
             border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            border-radius: 12px;
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
             cursor: pointer;
             background: rgba(36, 139, 237, 0.08);
             color: var(--button-color);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 20px;
+        }
+
+        .check-btn.done {
+            background: rgba(0, 200, 83, 0.1);
+            color: #00c853;
         }
 
         .empty-state {
@@ -138,7 +151,7 @@
         tg.MainButton.setText("ارسال لیست به ربات");
         tg.MainButton.show(); // همیشه دکمه را نشان بده
 
-        // ساختار جدید: آرایه‌ای از آبجکت‌ها { text, done }
+        // ساختار: { text: string, done: boolean }
         let savedTasks = JSON.parse(localStorage.getItem('myTasks') || '[]');
         if (!Array.isArray(savedTasks)) {
             savedTasks = [];
@@ -183,36 +196,41 @@
             }
 
             savedTasks.forEach((task, index) => {
-                const div = document.createElement('div');
-                div.className = 'task-card';
+                const row = document.createElement('div');
+                row.className = 'task-row';
+
+                // دکمه تیک بیرون کارت و قبل از آن
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'check-btn';
+                if (task.done) {
+                    checkBtn.classList.add('done');
+                    checkBtn.textContent = '✅';
+                } else {
+                    checkBtn.textContent = '☐';
+                }
+                checkBtn.onclick = () => toggleDone(index);
+
+                // کارت متن و حذف
+                const card = document.createElement('div');
+                card.className = 'task-card';
 
                 const textSpan = document.createElement('span');
                 textSpan.className = 'task-text';
                 if (task.done) textSpan.classList.add('task-done');
                 textSpan.textContent = task.text;
 
-                const controls = document.createElement('div');
-                controls.style.display = 'flex';
-                controls.style.gap = '6px';
-                controls.style.alignItems = 'center';
-
-                const checkBtn = document.createElement('button');
-                checkBtn.className = 'check-btn';
-                checkBtn.innerHTML = task.done ? '✅' : '☐';
-                checkBtn.onclick = () => toggleDone(index);
-
                 const delBtn = document.createElement('button');
                 delBtn.className = 'delete-icon';
                 delBtn.textContent = '✕';
                 delBtn.onclick = () => deleteTask(index);
 
-                controls.appendChild(checkBtn);
-                controls.appendChild(delBtn);
+                card.appendChild(textSpan);
+                card.appendChild(delBtn);
 
-                div.appendChild(textSpan);
-                div.appendChild(controls);
+                row.appendChild(checkBtn);
+                row.appendChild(card);
 
-                list.appendChild(div);
+                list.appendChild(row);
             });
         }
 
